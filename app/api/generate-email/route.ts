@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 
-// Initialize Groq client
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
-
 export async function POST(request: NextRequest) {
   try {
     // Validate API key exists
@@ -18,6 +13,11 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+  
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+    });
 
     // Parse request body
     const body = await request.json();
