@@ -4,7 +4,7 @@ import React, { useState, useCallback } from "react";
 import RecipientInput from "./RecipientInput";
 import EmailEditor from "./EmailEditor";
 import LoadingSpinner from "./LoadingSpinner";
-import { AppState, EmailGenerationResponse } from "../types";
+import { AppState, EmailGenerationResponse, EmailSendResponse } from "../types";
 
 export default function EmailComposer() {
   // Application state management
@@ -75,6 +75,26 @@ export default function EmailComposer() {
     return Object.keys(errors).length === 0;
   }, [state.prompt]);
 
+  // Validate form before sending email
+  const validateSendForm = useCallback((): boolean => {
+    const errors: AppState["errors"] = {};
+
+    // Validate recipients
+    if (state.recipients.length === 0) {
+      errors.recipients = "Please add at least one recipient";
+    }
+
+    // Validate email content
+    if (!state.generatedEmail.trim()) {
+      errors.email = "Please generate an email before sending";
+    }
+
+    // Update errors
+    setState((prev) => ({ ...prev, errors }));
+
+    return Object.keys(errors).length === 0;
+  }, [state.recipients, state.generatedEmail]);
+
   // Generate email using AI
   const handleGenerateEmail = useCallback(async () => {
     // Validate form first
@@ -143,6 +163,108 @@ export default function EmailComposer() {
       }));
     }
   }, [state.prompt, validateForm]);
+
+  // Send email to recipients
+  const handleSendEmail = useCallback(async () => {
+    // Validate form first
+    if (!validateSendForm()) {
+      return;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      isSending: true,
+      errors: { ...prev.errors, sending: undefined },
+    }));
+
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          recipients: state.recipients,
+          subject: state.emailSubject || "AI Generated Email",
+          content: state.generatedEmail.trim(),
+        }),
+      });
+
+      const data: EmailSendResponse = await response.json();
+
+      if (data.success) {
+        // Handle successful sending
+        const successMessage =
+          data.failedRecipients && data.failedRecipients.length > 0
+            ? `Email sent to ${
+                data.sentCount
+              } recipients. Failed to send to: ${data.failedRecipients.join(
+                ", "
+              )}`
+            : `Email successfully sent to ${data.sentCount} recipient${
+                data.sentCount === 1 ? "" : "s"
+              }!`;
+
+        // Clear form after successful sending
+        setState((prev) => ({
+          ...prev,
+          recipients: [],
+          prompt: "",
+          generatedEmail: "",
+          emailSubject: "",
+          isSending: false,
+          errors: {
+            sending:
+              data.failedRecipients && data.failedRecipients.length > 0
+                ? `Partially successful: ${data.error}`
+                : undefined,
+          },
+        }));
+
+        // Show success message temporarily
+        setTimeout(() => {
+          setState((prev) => ({
+            ...prev,
+            errors: { ...prev.errors, sending: undefined },
+          }));
+        }, 5000);
+
+        // For now, we'll use the error field to show success messages
+        // In a real app, you'd want a separate success state
+        if (!data.failedRecipients || data.failedRecipients.length === 0) {
+          setState((prev) => ({
+            ...prev,
+            errors: { ...prev.errors, sending: `✓ ${successMessage}` },
+          }));
+        }
+      } else {
+        setState((prev) => ({
+          ...prev,
+          isSending: false,
+          errors: {
+            ...prev.errors,
+            sending: data.error || "Failed to send email",
+          },
+        }));
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      setState((prev) => ({
+        ...prev,
+        isSending: false,
+        errors: {
+          ...prev.errors,
+          sending:
+            "Network error occurred. Please check your connection and try again.",
+        },
+      }));
+    }
+  }, [
+    state.recipients,
+    state.generatedEmail,
+    state.emailSubject,
+    validateSendForm,
+  ]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -283,6 +405,89 @@ export default function EmailComposer() {
               onChange={handleEmailContentChange}
               placeholder="Your AI-generated email will appear here. You can edit it before sending."
             />
+
+            {/* Send Email Button */}
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={handleSendEmail}
+                disabled={
+                  state.isSending ||
+                  state.recipients.length === 0 ||
+                  !state.generatedEmail.trim()
+                }
+                className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                  state.isSending ||
+                  state.recipients.length === 0 ||
+                  !state.generatedEmail.trim()
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-green-600 text-white hover:bg-green-700 active:bg-green-800 shadow-md hover:shadow-lg"
+                }`}
+              >
+                {state.isSending ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Sending Email...
+                  </div>
+                ) : (
+                  `Send Email to ${state.recipients.length} recipient${
+                    state.recipients.length === 1 ? "" : "s"
+                  }`
+                )}
+              </button>
+            </div>
+
+            {/* Loading state for email sending */}
+            {state.isSending && (
+              <div className="flex justify-center py-4">
+                <LoadingSpinner message="Sending your email..." />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Email sending status messages */}
+        {state.errors.sending && (
+          <div
+            className={`border rounded-lg p-4 ${
+              state.errors.sending.startsWith("✓")
+                ? "bg-green-50 border-green-200"
+                : "bg-red-50 border-red-200"
+            }`}
+          >
+            <div className="flex items-center">
+              <svg
+                className={`w-5 h-5 mr-2 flex-shrink-0 ${
+                  state.errors.sending.startsWith("✓")
+                    ? "text-green-400"
+                    : "text-red-400"
+                }`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                {state.errors.sending.startsWith("✓") ? (
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                ) : (
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                )}
+              </svg>
+              <p
+                className={`text-sm ${
+                  state.errors.sending.startsWith("✓")
+                    ? "text-green-700"
+                    : "text-red-700"
+                }`}
+              >
+                {state.errors.sending}
+              </p>
+            </div>
           </div>
         )}
       </div>

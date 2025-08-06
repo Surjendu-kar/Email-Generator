@@ -5,20 +5,38 @@ import { EmailSendRequest, EmailSendResponse } from "@/types";
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Create nodemailer transporter (using Gmail SMTP for demo purposes)
+// Create nodemailer transporter (using test account for demo purposes)
 // In production, this should be configured with proper email service credentials
-const createTransporter = () => {
-  // For demo purposes, we'll use a test account
+const createTransporter = async () => {
+  // For demo purposes, we'll create a test account dynamically
   // In production, configure with actual SMTP credentials
-  return nodemailer.createTransporter({
-    host: "smtp.ethereal.email", // Test SMTP server
-    port: 587,
-    secure: false,
-    auth: {
-      user: "demo@example.com", // Demo credentials
-      pass: "demo-password",
-    },
-  });
+  try {
+    const testAccount = await nodemailer.createTestAccount();
+    return nodemailer.createTransporter({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+  } catch (error) {
+    // Fallback to mock transporter for development
+    console.warn("Could not create test account, using mock transporter");
+    return {
+      verify: async () => true,
+      sendMail: async (mailOptions: any) => {
+        console.log("Mock email sent:", {
+          from: mailOptions.from,
+          to: mailOptions.to,
+          subject: mailOptions.subject,
+          text: mailOptions.text,
+        });
+        return { messageId: `mock-${Date.now()}` };
+      },
+    };
+  }
 };
 
 /**
@@ -156,7 +174,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create transporter
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
 
     // Verify transporter configuration
     try {
@@ -178,13 +196,19 @@ export async function POST(request: NextRequest) {
 
     for (const recipient of validEmails) {
       try {
-        await transporter.sendMail({
+        const result = await transporter.sendMail({
           from: '"AI Email Sender" <noreply@example.com>',
           to: recipient,
           subject: sanitizedSubject,
           text: sanitizedContent,
           html: sanitizedContent.replace(/\n/g, "<br>"),
         });
+
+        // Log the preview URL for test emails
+        if (result.messageId && result.messageId.includes("ethereal")) {
+          console.log(`Preview URL: ${nodemailer.getTestMessageUrl(result)}`);
+        }
+
         sentCount++;
       } catch (sendError) {
         console.error(`Failed to send email to ${recipient}:`, sendError);
