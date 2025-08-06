@@ -125,7 +125,7 @@ export default function RecipientInput({
           onKeyPress={handleKeyPress}
           onBlur={handleBlur}
           placeholder="Enter email addresses (press Enter or comma to add)"
-          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 placeholder-gray-500 ${
             inputError || errors.length > 0
               ? "border-red-300 focus:ring-red-500 focus:border-red-500"
               : "border-gray-300"

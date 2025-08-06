@@ -470,7 +470,7 @@ export default function EmailComposer() {
               value={state.prompt}
               onChange={handlePromptChange}
               placeholder="Describe the email you want to generate. For example: 'Write a professional follow-up email after a job interview, thanking the interviewer and expressing continued interest in the position.'"
-              className={`w-full px-4 py-3 border rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+              className={`w-full px-4 py-3 border rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 placeholder-gray-500 ${
                 state.errors.prompt
                   ? "border-red-300 focus:ring-red-500 focus:border-red-500"
                   : "border-gray-300"
@@ -604,13 +604,6 @@ export default function EmailComposer() {
                   )}
                 </button>
               </div>
-
-              {/* Loading state for email sending */}
-              {state.isSending && (
-                <div className="flex justify-center py-4">
-                  <LoadingSpinner message="Sending your email..." />
-                </div>
-              )}
             </div>
           )}
 
