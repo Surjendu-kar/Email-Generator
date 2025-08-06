@@ -17,42 +17,6 @@ export default function RecipientInput({
   const [inputValue, setInputValue] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setInputValue(value);
-
-      // Clear input error when user starts typing
-      if (inputError) {
-        setInputError(null);
-      }
-
-      // Real-time validation for email format (only if user has typed something substantial)
-      if (value.trim().length > 3 && value.includes("@")) {
-        const sanitizedEmail = sanitizeEmail(value.trim());
-        if (sanitizedEmail) {
-          const validation = validateEmailFormat(sanitizedEmail);
-          if (!validation.isValid) {
-            setInputError(validation.error || "Invalid email address format");
-          } else if (recipients.includes(sanitizedEmail)) {
-            setInputError("This email address has already been added");
-          }
-        }
-      }
-    },
-    [inputError, recipients]
-  );
-
-  const handleKeyPress = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" || e.key === ",") {
-        e.preventDefault();
-        addRecipient();
-      }
-    },
-    [inputValue, recipients]
-  );
-
   const addRecipient = useCallback(() => {
     if (!inputValue.trim()) {
       setInputError("Please enter an email address");
@@ -92,6 +56,42 @@ export default function RecipientInput({
     setInputValue("");
     setInputError(null);
   }, [inputValue, recipients, onRecipientsChange]);
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setInputValue(value);
+
+      // Clear input error when user starts typing
+      if (inputError) {
+        setInputError(null);
+      }
+
+      // Real-time validation for email format (only if user has typed something substantial)
+      if (value.trim().length > 3 && value.includes("@")) {
+        const sanitizedEmail = sanitizeEmail(value.trim());
+        if (sanitizedEmail) {
+          const validation = validateEmailFormat(sanitizedEmail);
+          if (!validation.isValid) {
+            setInputError(validation.error || "Invalid email address format");
+          } else if (recipients.includes(sanitizedEmail)) {
+            setInputError("This email address has already been added");
+          }
+        }
+      }
+    },
+    [inputError, recipients]
+  );
+
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" || e.key === ",") {
+        e.preventDefault();
+        addRecipient();
+      }
+    },
+    [addRecipient]
+  );
 
   const removeRecipient = useCallback(
     (emailToRemove: string) => {

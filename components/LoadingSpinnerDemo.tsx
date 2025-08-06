@@ -62,12 +62,16 @@ export default function LoadingSpinnerDemo() {
             message
           </p>
           <p>
-            <code>&lt;LoadingSpinner message="Generating email..." /&gt;</code>{" "}
+            <code>
+              &lt;LoadingSpinner message=&quot;Generating email...&quot; /&gt;
+            </code>{" "}
             - Spinner with custom message
           </p>
           <p>
-            <code>&lt;LoadingSpinner message="Sending emails..." /&gt;</code> -
-            Spinner for email sending
+            <code>
+              &lt;LoadingSpinner message=&quot;Sending emails...&quot; /&gt;
+            </code>{" "}
+            - Spinner for email sending
           </p>
         </div>
       </div>

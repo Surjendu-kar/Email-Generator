@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import nodemailer, { Transporter } from "nodemailer";
 import { EmailSendRequest, EmailSendResponse } from "@/types";
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Create nodemailer transporter with support for real email services
-const createTransporter = async () => {
+const createTransporter = async (): Promise<Transporter> => {
   // Check if real email service is configured
   const emailService = process.env.EMAIL_SERVICE; // 'gmail', 'sendgrid', 'smtp', or 'test'
   const emailUser = process.env.EMAIL_USER;
@@ -85,21 +85,41 @@ const createTransporter = async () => {
         pass: testAccount.pass,
       },
     });
-  } catch (error) {
+  } catch {
     // Final fallback to mock transporter
     console.warn("Could not create test account, using mock transporter");
-    return {
+    
+    const mockTransporter: Transporter = {
       verify: async () => true,
-      sendMail: async (mailOptions: any) => {
+      sendMail: async (mailOptions) => {
+        const toArray = Array.isArray(mailOptions.to) 
+          ? mailOptions.to 
+          : mailOptions.to 
+          ? [String(mailOptions.to)] 
+          : [];
+
         console.log("Mock email sent:", {
           from: mailOptions.from,
           to: mailOptions.to,
           subject: mailOptions.subject,
           text: mailOptions.text,
         });
-        return { messageId: `mock-${Date.now()}` };
+        
+        return {
+          messageId: `mock-${Date.now()}`,
+          envelope: {
+            from: String(mailOptions.from || ''),
+            to: toArray,
+          },
+          accepted: toArray,
+          rejected: [],
+          pending: [],
+          response: "250 Mock email accepted",
+        };
       },
-    };
+    } as Transporter;
+
+    return mockTransporter;
   }
 };
 
@@ -280,7 +300,9 @@ export async function POST(request: NextRequest) {
           typeof result.messageId === "string" &&
           result.messageId.includes("ethereal")
         ) {
-          console.log(`Preview URL: ${nodemailer.getTestMessageUrl(result)}`);
+          console.log(
+            `Preview URL: ${nodemailer.getTestMessageUrl(result)}`
+          );
           console.log(
             `Note: This is a test email. To send real emails, configure EMAIL_SERVICE in .env.local`
           );

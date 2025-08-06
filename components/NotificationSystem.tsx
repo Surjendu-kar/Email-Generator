@@ -30,6 +30,13 @@ function NotificationItem({ notification, onDismiss }: NotificationItemProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
+  const handleDismiss = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onDismiss(notification.id);
+    }, 300);
+  }, [notification.id, onDismiss]);
+
   // Show notification with animation
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 100);
@@ -45,14 +52,7 @@ function NotificationItem({ notification, onDismiss }: NotificationItemProps) {
       }, duration);
       return () => clearTimeout(timer);
     }
-  }, [notification.duration, notification.persistent]);
-
-  const handleDismiss = useCallback(() => {
-    setIsExiting(true);
-    setTimeout(() => {
-      onDismiss(notification.id);
-    }, 300);
-  }, [notification.id, onDismiss]);
+  }, [notification.duration, notification.persistent, handleDismiss]);
 
   const getNotificationStyles = () => {
     const baseStyles = "border-l-4 p-4 rounded-r-lg shadow-lg";
