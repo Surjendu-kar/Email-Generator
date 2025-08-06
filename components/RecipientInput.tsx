@@ -110,7 +110,7 @@ export default function RecipientInput({
     <div className="space-y-3">
       <label
         htmlFor="recipients"
-        className="block text-sm font-medium text-gray-700"
+        className="block text-sm font-semibold text-slate-700"
       >
         Email Recipients
       </label>
@@ -125,10 +125,10 @@ export default function RecipientInput({
           onKeyPress={handleKeyPress}
           onBlur={handleBlur}
           placeholder="Enter email addresses (press Enter or comma to add)"
-          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 placeholder-gray-500 ${
+          className={`w-full px-4 py-3 pr-16 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-slate-900 placeholder-slate-500 hover:border-slate-400 ${
             inputError || errors.length > 0
-              ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-              : "border-gray-300"
+              ? "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50"
+              : "border-slate-300 bg-slate-50 focus:bg-white"
           }`}
         />
 
@@ -137,7 +137,7 @@ export default function RecipientInput({
           <button
             type="button"
             onClick={addRecipient}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all duration-200 hover:scale-105 active:scale-95"
           >
             Add
           </button>
@@ -146,9 +146,9 @@ export default function RecipientInput({
 
       {/* Input validation error */}
       {inputError && (
-        <p className="text-sm text-red-600 flex items-center">
+        <p className="text-sm text-red-600 flex items-center bg-red-50 p-3 rounded-lg border border-red-200">
           <svg
-            className="w-4 h-4 mr-1 flex-shrink-0"
+            className="w-4 h-4 mr-2 flex-shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -164,11 +164,14 @@ export default function RecipientInput({
 
       {/* General errors */}
       {errors.length > 0 && (
-        <div className="space-y-1">
+        <div className="space-y-2">
           {errors.map((error, index) => (
-            <p key={index} className="text-sm text-red-600 flex items-center">
+            <p
+              key={index}
+              className="text-sm text-red-600 flex items-center bg-red-50 p-3 rounded-lg border border-red-200"
+            >
               <svg
-                className="w-4 h-4 mr-1 flex-shrink-0"
+                className="w-4 h-4 mr-2 flex-shrink-0"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -186,23 +189,26 @@ export default function RecipientInput({
 
       {/* Recipients list */}
       {recipients.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700">
-            Recipients ({recipients.length}/50)
-          </p>
-          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border border-gray-200 rounded-md bg-gray-50">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-700">Recipients</p>
+            <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+              {recipients.length}/50
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-3 border border-slate-200 rounded-xl bg-slate-50 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
             {recipients.map((email, index) => (
               <div
                 key={`${email}-${index}`}
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200"
+                className="inline-flex items-center px-3 py-2 rounded-lg text-sm bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 border border-blue-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
               >
-                <span className="truncate max-w-xs" title={email}>
+                <span className="truncate max-w-xs font-medium" title={email}>
                   {email}
                 </span>
                 <button
                   type="button"
                   onClick={() => removeRecipient(email)}
-                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
+                  className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all duration-200 hover:scale-110 active:scale-95"
                   aria-label={`Remove ${email}`}
                 >
                   <svg
@@ -224,9 +230,16 @@ export default function RecipientInput({
       )}
 
       {/* Helper text */}
-      <p className="text-xs text-gray-500">
-        Enter email addresses and press Enter or comma to add them. Click the ×
-        to remove recipients.
+      <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-200">
+        💡 Enter email addresses and press{" "}
+        <kbd className="px-1 py-0.5 bg-slate-200 rounded text-xs font-mono">
+          Enter
+        </kbd>{" "}
+        or{" "}
+        <kbd className="px-1 py-0.5 bg-slate-200 rounded text-xs font-mono">
+          ,
+        </kbd>{" "}
+        to add them. Click the × to remove recipients.
       </p>
     </div>
   );

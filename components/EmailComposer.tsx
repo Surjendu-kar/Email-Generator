@@ -482,41 +482,43 @@ export default function EmailComposer() {
 
       {/* Reset Confirmation Dialog */}
       {showResetConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 transform transition-all duration-300 scale-100">
             <div className="flex items-center mb-4">
-              <svg
-                className="w-6 h-6 text-amber-500 mr-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"
-                />
-              </svg>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center mr-3">
+                <svg
+                  className="w-5 h-5 text-amber-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">
                 Confirm Form Reset
               </h3>
             </div>
-            <p className="text-gray-600 mb-6">
+            <p className="text-slate-600 mb-6 leading-relaxed">
               Are you sure you want to clear the form? This will remove all
               recipients, your prompt, and any generated email content. This
               action cannot be undone.
             </p>
-            <div className="flex justify-end space-x-3">
+            <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
               <button
                 onClick={() => setShowResetConfirmation(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                className="px-4 py-2.5 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 font-medium hover:scale-105 active:scale-95"
               >
                 Cancel
               </button>
               <button
                 onClick={handleResetConfirmation}
-                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className="px-4 py-2.5 text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 font-medium hover:scale-105 active:scale-95 shadow-lg"
               >
                 Clear Form
               </button>
@@ -525,13 +527,13 @@ export default function EmailComposer() {
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto p-6 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="text-center relative">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-2 sm:mb-3">
             AI Email Composer
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
             Generate personalized emails using AI and send them to multiple
             recipients
           </p>
@@ -540,11 +542,11 @@ export default function EmailComposer() {
           {hasFormContent() && (
             <button
               onClick={handleResetClick}
-              className="absolute top-0 right-0 px-3 py-1 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              className="absolute top-0 right-0 px-2 sm:px-3 py-1 text-xs sm:text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transform hover:scale-105"
               title="Clear form"
             >
               <svg
-                className="w-4 h-4 inline mr-1"
+                className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -556,13 +558,13 @@ export default function EmailComposer() {
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"
                 />
               </svg>
-              Clear Form
+              <span className="hidden sm:inline">Clear Form</span>
             </button>
           )}
         </div>
 
         {/* Main form */}
-        <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
+        <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
           {/* Recipients Input */}
           <RecipientInput
             recipients={state.recipients}
@@ -574,7 +576,7 @@ export default function EmailComposer() {
           <div className="space-y-3">
             <label
               htmlFor="prompt-input"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-semibold text-slate-700"
             >
               Email Generation Prompt
             </label>
@@ -583,26 +585,28 @@ export default function EmailComposer() {
               value={state.prompt}
               onChange={handlePromptChange}
               placeholder="Describe the email you want to generate. For example: 'Write a professional follow-up email after a job interview, thanking the interviewer and expressing continued interest in the position.'"
-              className={`w-full px-4 py-3 border rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 placeholder-gray-500 ${
+              className={`w-full px-4 py-3 border rounded-xl shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-slate-900 placeholder-slate-500 hover:border-slate-400 ${
                 state.errors.prompt
-                  ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                  : "border-gray-300"
+                  ? "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50"
+                  : "border-slate-300 bg-slate-50 focus:bg-white"
               }`}
               rows={4}
               maxLength={2000}
             />
 
             {/* Character count */}
-            <div className="flex justify-between items-center text-xs text-gray-500">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-xs text-slate-500">
               <span>Describe what kind of email you want to generate</span>
-              <span>{state.prompt.length}/2000 characters</span>
+              <span className="font-medium">
+                {state.prompt.length}/2000 characters
+              </span>
             </div>
 
             {/* Prompt validation error */}
             {state.errors.prompt && (
-              <p className="text-sm text-red-600 flex items-center">
+              <p className="text-sm text-red-600 flex items-center bg-red-50 p-3 rounded-lg border border-red-200">
                 <svg
-                  className="w-4 h-4 mr-1 flex-shrink-0"
+                  className="w-4 h-4 mr-2 flex-shrink-0"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -622,19 +626,35 @@ export default function EmailComposer() {
             <button
               onClick={handleGenerateEmail}
               disabled={state.isGenerating || !state.prompt.trim()}
-              className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform ${
                 state.isGenerating || !state.prompt.trim()
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-md hover:shadow-lg"
+                  ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
               }`}
             >
               {state.isGenerating ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Generating Email...
+                  <span className="hidden sm:inline">Generating Email...</span>
+                  <span className="sm:hidden">Generating...</span>
                 </div>
               ) : (
-                "Generate Email"
+                <>
+                  <svg
+                    className="w-4 h-4 inline mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                  Generate Email
+                </>
               )}
             </button>
           </div>
@@ -648,10 +668,10 @@ export default function EmailComposer() {
 
           {/* Email generation error */}
           {state.errors.email && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 shadow-sm">
+              <div className="flex items-start">
                 <svg
-                  className="w-5 h-5 text-red-400 mr-2 flex-shrink-0"
+                  className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -661,7 +681,14 @@ export default function EmailComposer() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <p className="text-sm text-red-700">{state.errors.email}</p>
+                <div>
+                  <p className="text-sm font-medium text-red-800">
+                    Generation Error
+                  </p>
+                  <p className="text-sm text-red-700 mt-1">
+                    {state.errors.email}
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -671,12 +698,14 @@ export default function EmailComposer() {
             <div className="space-y-4">
               {/* Subject line display */}
               {state.emailSubject && (
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-slate-700">
                     Email Subject
                   </label>
-                  <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                    <p className="text-gray-900">{state.emailSubject}</p>
+                  <div className="px-4 py-3 bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-xl shadow-sm">
+                    <p className="text-slate-900 font-medium">
+                      {state.emailSubject}
+                    </p>
                   </div>
                 </div>
               )}
@@ -697,23 +726,43 @@ export default function EmailComposer() {
                     state.recipients.length === 0 ||
                     !state.generatedEmail.trim()
                   }
-                  className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                  className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transform ${
                     state.isSending ||
                     state.recipients.length === 0 ||
                     !state.generatedEmail.trim()
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-green-600 text-white hover:bg-green-700 active:bg-green-800 shadow-md hover:shadow-lg"
+                      ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                      : "bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 active:from-green-800 active:to-green-900 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
                   }`}
                 >
                   {state.isSending ? (
                     <div className="flex items-center">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Sending Email...
+                      <span className="hidden sm:inline">Sending Email...</span>
+                      <span className="sm:hidden">Sending...</span>
                     </div>
                   ) : (
-                    `Send Email to ${state.recipients.length} recipient${
-                      state.recipients.length === 1 ? "" : "s"
-                    }`
+                    <>
+                      <svg
+                        className="w-4 h-4 inline mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        />
+                      </svg>
+                      <span className="hidden sm:inline">
+                        Send Email to {state.recipients.length} recipient
+                        {state.recipients.length === 1 ? "" : "s"}
+                      </span>
+                      <span className="sm:hidden">
+                        Send ({state.recipients.length})
+                      </span>
+                    </>
                   )}
                 </button>
               </div>
@@ -723,15 +772,15 @@ export default function EmailComposer() {
           {/* Email sending status messages */}
           {state.errors.sending && (
             <div
-              className={`border rounded-lg p-4 ${
+              className={`border rounded-xl p-4 shadow-sm ${
                 state.errors.sending.startsWith("✓")
                   ? "bg-green-50 border-green-200"
                   : "bg-red-50 border-red-200"
               }`}
             >
-              <div className="flex items-center">
+              <div className="flex items-start">
                 <svg
-                  className={`w-5 h-5 mr-2 flex-shrink-0 ${
+                  className={`w-5 h-5 mr-3 flex-shrink-0 mt-0.5 ${
                     state.errors.sending.startsWith("✓")
                       ? "text-green-400"
                       : "text-red-400"
@@ -753,15 +802,26 @@ export default function EmailComposer() {
                     />
                   )}
                 </svg>
-                <p
-                  className={`text-sm ${
-                    state.errors.sending.startsWith("✓")
-                      ? "text-green-700"
-                      : "text-red-700"
-                  }`}
-                >
-                  {state.errors.sending}
-                </p>
+                <div>
+                  <p
+                    className={`text-sm font-medium ${
+                      state.errors.sending.startsWith("✓")
+                        ? "text-green-800"
+                        : "text-red-800"
+                    }`}
+                  >
+                    {state.errors.sending.startsWith("✓") ? "Success" : "Error"}
+                  </p>
+                  <p
+                    className={`text-sm mt-1 ${
+                      state.errors.sending.startsWith("✓")
+                        ? "text-green-700"
+                        : "text-red-700"
+                    }`}
+                  >
+                    {state.errors.sending}
+                  </p>
+                </div>
               </div>
             </div>
           )}
