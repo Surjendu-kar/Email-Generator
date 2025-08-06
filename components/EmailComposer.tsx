@@ -527,26 +527,18 @@ export default function EmailComposer() {
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
-        {/* Header */}
-        <div className="text-center relative">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-2 sm:mb-3">
-            AI Email Composer
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
-            Generate personalized emails using AI and send them to multiple
-            recipients
-          </p>
-
-          {/* Reset Button - positioned in top right */}
+      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
+        {/* Header with Reset Button */}
+        <div className="flex justify-end relative">
+          {/* Reset Button */}
           {hasFormContent() && (
             <button
               onClick={handleResetClick}
-              className="absolute top-0 right-0 px-2 sm:px-3 py-1 text-xs sm:text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transform hover:scale-105"
+              className="px-3 py-2 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transform hover:scale-105"
               title="Clear form"
             >
               <svg
-                className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1"
+                className="w-4 h-4 inline mr-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -558,7 +550,7 @@ export default function EmailComposer() {
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"
                 />
               </svg>
-              <span className="hidden sm:inline">Clear Form</span>
+              Clear Form
             </button>
           )}
         </div>
