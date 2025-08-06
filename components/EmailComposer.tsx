@@ -19,6 +19,9 @@ export default function EmailComposer() {
     errors: {},
   });
 
+  // Confirmation dialog state
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+
   // Notification system
   const {
     notifications,
@@ -28,6 +31,47 @@ export default function EmailComposer() {
     showWarning,
     showInfo,
   } = useNotifications();
+
+  // Form reset functionality
+  const resetForm = useCallback(() => {
+    setState({
+      recipients: [],
+      prompt: "",
+      generatedEmail: "",
+      emailSubject: "",
+      isGenerating: false,
+      isSending: false,
+      errors: {},
+    });
+    showInfo(
+      "Form Reset",
+      "The form has been cleared and is ready for new composition."
+    );
+  }, [showInfo]);
+
+  // Handle reset confirmation
+  const handleResetConfirmation = useCallback(() => {
+    setShowResetConfirmation(false);
+    resetForm();
+  }, [resetForm]);
+
+  // Check if form has content that would be lost
+  const hasFormContent = useCallback(() => {
+    return (
+      state.recipients.length > 0 ||
+      state.prompt.trim() !== "" ||
+      state.generatedEmail.trim() !== ""
+    );
+  }, [state.recipients.length, state.prompt, state.generatedEmail]);
+
+  // Handle reset button click with confirmation
+  const handleResetClick = useCallback(() => {
+    if (hasFormContent()) {
+      setShowResetConfirmation(true);
+    } else {
+      resetForm();
+    }
+  }, [hasFormContent, resetForm]);
 
   // Real-time validation for prompt
   const validatePrompt = useCallback((prompt: string): string | undefined => {
@@ -376,16 +420,16 @@ export default function EmailComposer() {
 
           showSuccess("Email Sent", successMessage);
 
-          // Clear form after successful sending
-          setState((prev) => ({
-            ...prev,
+          // Clear form after successful sending (requirement 5.6)
+          setState({
             recipients: [],
             prompt: "",
             generatedEmail: "",
             emailSubject: "",
+            isGenerating: false,
             isSending: false,
             errors: {},
-          }));
+          });
         }
       } else {
         const errorMessage = data.error || "Failed to send email";
@@ -436,9 +480,54 @@ export default function EmailComposer() {
         onDismiss={removeNotification}
       />
 
+      {/* Reset Confirmation Dialog */}
+      {showResetConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="flex items-center mb-4">
+              <svg
+                className="w-6 h-6 text-amber-500 mr-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Confirm Form Reset
+              </h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to clear the form? This will remove all
+              recipients, your prompt, and any generated email content. This
+              action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowResetConfirmation(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResetConfirmation}
+                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                Clear Form
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto p-6 space-y-8">
         {/* Header */}
-        <div className="text-center">
+        <div className="text-center relative">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             AI Email Composer
           </h1>
@@ -446,6 +535,30 @@ export default function EmailComposer() {
             Generate personalized emails using AI and send them to multiple
             recipients
           </p>
+
+          {/* Reset Button - positioned in top right */}
+          {hasFormContent() && (
+            <button
+              onClick={handleResetClick}
+              className="absolute top-0 right-0 px-3 py-1 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              title="Clear form"
+            >
+              <svg
+                className="w-4 h-4 inline mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              Clear Form
+            </button>
+          )}
         </div>
 
         {/* Main form */}
