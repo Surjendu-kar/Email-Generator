@@ -5,14 +5,78 @@ import { EmailSendRequest, EmailSendResponse } from "@/types";
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Create nodemailer transporter (using test account for demo purposes)
-// In production, this should be configured with proper email service credentials
+// Create nodemailer transporter with support for real email services
 const createTransporter = async () => {
-  // For demo purposes, we'll create a test account dynamically
-  // In production, configure with actual SMTP credentials
+  // Check if real email service is configured
+  const emailService = process.env.EMAIL_SERVICE; // 'gmail', 'sendgrid', 'smtp', or 'test'
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpPort = process.env.SMTP_PORT;
+
+  // Gmail configuration
+  if (emailService === "gmail" && emailUser && emailPass) {
+    return nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: emailUser,
+        pass: emailPass, // Use App Password, not regular password
+      },
+    });
+  }
+
+  // SendGrid configuration
+  if (emailService === "sendgrid" && process.env.SENDGRID_API_KEY) {
+    return nodemailer.createTransport({
+      host: "smtp.sendgrid.net",
+      port: 587,
+      secure: false,
+      auth: {
+        user: "apikey",
+        pass: process.env.SENDGRID_API_KEY,
+      },
+    });
+  }
+
+  // Custom SMTP configuration
+  if (emailService === "smtp" && smtpHost && emailUser && emailPass) {
+    return nodemailer.createTransport({
+      host: smtpHost,
+      port: parseInt(smtpPort || "587"),
+      secure: smtpPort === "465", // true for 465, false for other ports
+      auth: {
+        user: emailUser,
+        pass: emailPass,
+      },
+    });
+  }
+
+  // AWS SES configuration
+  if (
+    emailService === "ses" &&
+    process.env.AWS_ACCESS_KEY_ID &&
+    process.env.AWS_SECRET_ACCESS_KEY
+  ) {
+    return nodemailer.createTransport({
+      host: `email-smtp.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com`,
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.AWS_ACCESS_KEY_ID,
+        pass: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+  }
+
+  // Fallback to test/development mode
+  console.warn("No real email service configured. Using test mode.");
+  console.warn(
+    "To send real emails, configure EMAIL_SERVICE environment variable."
+  );
+
   try {
     const testAccount = await nodemailer.createTestAccount();
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       host: "smtp.ethereal.email",
       port: 587,
       secure: false,
@@ -22,7 +86,7 @@ const createTransporter = async () => {
       },
     });
   } catch (error) {
-    // Fallback to mock transporter for development
+    // Final fallback to mock transporter
     console.warn("Could not create test account, using mock transporter");
     return {
       verify: async () => true,
@@ -196,8 +260,14 @@ export async function POST(request: NextRequest) {
 
     for (const recipient of validEmails) {
       try {
+        const senderEmail =
+          process.env.SENDER_EMAIL ||
+          process.env.EMAIL_USER ||
+          '"AI Email Sender" <noreply@example.com>';
+        const senderName = process.env.SENDER_NAME || "AI Email Sender";
+
         const result = await transporter.sendMail({
-          from: '"AI Email Sender" <noreply@example.com>',
+          from: `"${senderName}" <${senderEmail}>`,
           to: recipient,
           subject: sanitizedSubject,
           text: sanitizedContent,
@@ -205,8 +275,15 @@ export async function POST(request: NextRequest) {
         });
 
         // Log the preview URL for test emails
-        if (result.messageId && result.messageId.includes("ethereal")) {
+        if (
+          result.messageId &&
+          typeof result.messageId === "string" &&
+          result.messageId.includes("ethereal")
+        ) {
           console.log(`Preview URL: ${nodemailer.getTestMessageUrl(result)}`);
+          console.log(
+            `Note: This is a test email. To send real emails, configure EMAIL_SERVICE in .env.local`
+          );
         }
 
         sentCount++;

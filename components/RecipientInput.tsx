@@ -26,8 +26,21 @@ export default function RecipientInput({
       if (inputError) {
         setInputError(null);
       }
+
+      // Real-time validation for email format (only if user has typed something substantial)
+      if (value.trim().length > 3 && value.includes("@")) {
+        const sanitizedEmail = sanitizeEmail(value.trim());
+        if (sanitizedEmail) {
+          const validation = validateEmailFormat(sanitizedEmail);
+          if (!validation.isValid) {
+            setInputError(validation.error || "Invalid email address format");
+          } else if (recipients.includes(sanitizedEmail)) {
+            setInputError("This email address has already been added");
+          }
+        }
+      }
     },
-    [inputError]
+    [inputError, recipients]
   );
 
   const handleKeyPress = useCallback(
@@ -42,6 +55,7 @@ export default function RecipientInput({
 
   const addRecipient = useCallback(() => {
     if (!inputValue.trim()) {
+      setInputError("Please enter an email address");
       return;
     }
 
@@ -55,7 +69,7 @@ export default function RecipientInput({
     // Validate email format
     const validation = validateEmailFormat(sanitizedEmail);
     if (!validation.isValid) {
-      setInputError(validation.error || "Invalid email address");
+      setInputError(validation.error || "Invalid email address format");
       return;
     }
 
@@ -67,7 +81,9 @@ export default function RecipientInput({
 
     // Check maximum recipients limit
     if (recipients.length >= 50) {
-      setInputError("Maximum 50 recipients allowed");
+      setInputError(
+        "Maximum 50 recipients allowed. Please remove some recipients first."
+      );
       return;
     }
 

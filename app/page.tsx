@@ -1,9 +1,12 @@
 import EmailComposer from "../components/EmailComposer";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 function Home() {
   return (
     <div className="min-h-screen bg-gray-100 py-8">
-      <EmailComposer />
+      <ErrorBoundary>
+        <EmailComposer />
+      </ErrorBoundary>
     </div>
   );
 }
