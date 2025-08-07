@@ -13,7 +13,7 @@ export default function EmailComposer() {
     generatedEmail: "",
     emailSubject: "",
     isGenerating: false,
-    errors: {} as Record<string, string>,
+    errors: {} as Record<string, string | undefined>,
   });
 
   // Confirmation dialog state
@@ -132,7 +132,7 @@ export default function EmailComposer() {
 
   // Validate form before generating email
   const validateForm = useCallback((): boolean => {
-    const errors: AppState["errors"] = {};
+    const errors: Record<string, string> = {};
 
     // Validate prompt
     const promptError = validatePrompt(state.prompt);
