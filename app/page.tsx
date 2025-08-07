@@ -2,7 +2,6 @@ import EmailComposer from "../components/EmailComposer";
 import ErrorBoundary from "../components/ErrorBoundary";
 
 export default function Home() {
-  
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-8">
@@ -31,9 +30,9 @@ export default function Home() {
                 </h1>
               </div>
               <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-                Transform your ideas into professional emails with AI. Generate,
-                edit, and send personalized messages to multiple recipients
-                effortlessly.
+                Transform your ideas into professional emails with AI. Generate
+                and edit content, then open directly in Gmail to add recipients
+                and send.
               </p>
             </header>
 

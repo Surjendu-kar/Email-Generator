@@ -1,29 +1,11 @@
 // Validation schemas and utility types
 
 /**
- * Email validation schema
- */
-export interface EmailValidationSchema {
-  email: string;
-  isValid: boolean;
-  errorMessage?: string;
-}
-
-/**
  * Prompt validation constraints
  */
 export const PROMPT_VALIDATION = {
   MIN_LENGTH: 10,
   MAX_LENGTH: 1000,
-} as const;
-
-/**
- * Email validation constraints
- */
-export const EMAIL_VALIDATION = {
-  MAX_RECIPIENTS: 50,
-  EMAIL_REGEX:
-    /^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
 } as const;
 
 /**
@@ -52,7 +34,6 @@ export interface FieldValidation {
  * Complete form validation state
  */
 export interface FormValidationState {
-  recipients: FieldValidation;
   prompt: FieldValidation;
   emailContent: FieldValidation;
   emailSubject: FieldValidation;
@@ -63,19 +44,12 @@ export interface FormValidationState {
  */
 export interface LoadingStates {
   generating: boolean;
-  sending: boolean;
   validating: boolean;
 }
 
 /**
  * Component props interfaces
  */
-export interface RecipientInputProps {
-  recipients: string[];
-  onRecipientsChange: (recipients: string[]) => void;
-  errors?: string[];
-}
-
 export interface EmailEditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -84,104 +58,6 @@ export interface EmailEditorProps {
 
 export interface LoadingSpinnerProps {
   message?: string;
-}
-
-/**
- * Email validation result interface
- */
-export interface EmailValidationResult {
-  isValid: boolean;
-  error?: string;
-}
-
-/**
- * Validates a single email address format
- * @param email - The email address to validate
- * @returns EmailValidationResult with validation status and error message
- */
-export function validateEmailFormat(email: string): EmailValidationResult {
-  if (!email || typeof email !== "string") {
-    return {
-      isValid: false,
-      error: "Email address is required",
-    };
-  }
-
-  const trimmedEmail = email.trim();
-
-  if (trimmedEmail.length === 0) {
-    return {
-      isValid: false,
-      error: "Email address cannot be empty",
-    };
-  }
-
-  if (trimmedEmail.length > 254) {
-    return {
-      isValid: false,
-      error: "Email address is too long (maximum 254 characters)",
-    };
-  }
-
-  if (!EMAIL_VALIDATION.EMAIL_REGEX.test(trimmedEmail)) {
-    return {
-      isValid: false,
-      error: "Please enter a valid email address",
-    };
-  }
-
-  return {
-    isValid: true,
-  };
-}
-
-/**
- * Validates multiple email addresses
- * @param emails - Array of email addresses to validate
- * @returns Array of validation results for each email
- */
-export function validateEmailList(emails: string[]): EmailValidationResult[] {
-  if (!Array.isArray(emails)) {
-    return [
-      {
-        isValid: false,
-        error: "Invalid email list format",
-      },
-    ];
-  }
-
-  if (emails.length === 0) {
-    return [
-      {
-        isValid: false,
-        error: "At least one email address is required",
-      },
-    ];
-  }
-
-  if (emails.length > EMAIL_VALIDATION.MAX_RECIPIENTS) {
-    return [
-      {
-        isValid: false,
-        error: `Maximum ${EMAIL_VALIDATION.MAX_RECIPIENTS} recipients allowed`,
-      },
-    ];
-  }
-
-  // Check for duplicates
-  const uniqueEmails = new Set(
-    emails.map((email) => email.trim().toLowerCase())
-  );
-  if (uniqueEmails.size !== emails.length) {
-    return [
-      {
-        isValid: false,
-        error: "Duplicate email addresses are not allowed",
-      },
-    ];
-  }
-
-  return emails.map((email) => validateEmailFormat(email));
 }
 
 /**
@@ -205,29 +81,6 @@ export function sanitizeInput(input: string): string {
       .replace(/[ ]{2,}/g, " ")
       // Remove leading/trailing whitespace
       .trim()
-  );
-}
-
-/**
- * Sanitizes email address input
- * @param email - The email address to sanitize
- * @returns Sanitized email address
- */
-export function sanitizeEmail(email: string): string {
-  if (!email || typeof email !== "string") {
-    return "";
-  }
-
-  return (
-    email
-      .trim()
-      .toLowerCase()
-      // Remove any characters that shouldn't be in an email
-      .replace(/[^\w@.-]/g, "")
-      // Remove multiple consecutive dots
-      .replace(/\.{2,}/g, ".")
-      // Remove dots at the beginning or end
-      .replace(/^\.+|\.+$/g, "")
   );
 }
 

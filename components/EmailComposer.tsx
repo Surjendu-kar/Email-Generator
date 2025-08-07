@@ -1,22 +1,19 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import RecipientInput from "./RecipientInput";
 import EmailEditor from "./EmailEditor";
 import LoadingSpinner from "./LoadingSpinner";
 import NotificationSystem, { useNotifications } from "./NotificationSystem";
-import { AppState, EmailGenerationResponse, EmailSendResponse } from "../types";
+import { EmailGenerationResponse } from "../types";
 
 export default function EmailComposer() {
   // Application state management
-  const [state, setState] = useState<AppState>({
-    recipients: [],
+  const [state, setState] = useState({
     prompt: "",
     generatedEmail: "",
     emailSubject: "",
     isGenerating: false,
-    isSending: false,
-    errors: {},
+    errors: {} as Record<string, string>,
   });
 
   // Confirmation dialog state
@@ -35,12 +32,10 @@ export default function EmailComposer() {
   // Form reset functionality
   const resetForm = useCallback(() => {
     setState({
-      recipients: [],
       prompt: "",
       generatedEmail: "",
       emailSubject: "",
       isGenerating: false,
-      isSending: false,
       errors: {},
     });
     showInfo(
@@ -57,12 +52,8 @@ export default function EmailComposer() {
 
   // Check if form has content that would be lost
   const hasFormContent = useCallback(() => {
-    return (
-      state.recipients.length > 0 ||
-      state.prompt.trim() !== "" ||
-      state.generatedEmail.trim() !== ""
-    );
-  }, [state.recipients.length, state.prompt, state.generatedEmail]);
+    return state.prompt.trim() !== "" || state.generatedEmail.trim() !== "";
+  }, [state.prompt, state.generatedEmail]);
 
   // Handle reset button click with confirmation
   const handleResetClick = useCallback(() => {
@@ -87,20 +78,6 @@ export default function EmailComposer() {
     return undefined;
   }, []);
 
-  // Real-time validation for recipients
-  const validateRecipients = useCallback(
-    (recipients: string[]): string | undefined => {
-      if (recipients.length === 0) {
-        return "Please add at least one recipient";
-      }
-      if (recipients.length > 50) {
-        return "Maximum 50 recipients allowed";
-      }
-      return undefined;
-    },
-    []
-  );
-
   // Real-time validation for email content
   const validateEmailContent = useCallback(
     (content: string): string | undefined => {
@@ -113,24 +90,6 @@ export default function EmailComposer() {
       return undefined;
     },
     []
-  );
-
-  // Handle recipients change with real-time validation
-  const handleRecipientsChange = useCallback(
-    (recipients: string[]) => {
-      // Real-time validation
-      const recipientsError = validateRecipients(recipients);
-
-      setState((prev) => ({
-        ...prev,
-        recipients,
-        errors: {
-          ...prev.errors,
-          recipients: recipientsError,
-        },
-      }));
-    },
-    [validateRecipients]
   );
 
   // Handle prompt input change with real-time validation
@@ -186,33 +145,6 @@ export default function EmailComposer() {
 
     return Object.keys(errors).length === 0;
   }, [state.prompt, validatePrompt]);
-
-  // Validate form before sending email
-  const validateSendForm = useCallback((): boolean => {
-    const errors: AppState["errors"] = {};
-
-    // Validate recipients
-    const recipientsError = validateRecipients(state.recipients);
-    if (recipientsError) {
-      errors.recipients = recipientsError;
-    }
-
-    // Validate email content
-    const emailError = validateEmailContent(state.generatedEmail);
-    if (emailError) {
-      errors.email = emailError;
-    }
-
-    // Update errors
-    setState((prev) => ({ ...prev, errors }));
-
-    return Object.keys(errors).length === 0;
-  }, [
-    state.recipients,
-    state.generatedEmail,
-    validateRecipients,
-    validateEmailContent,
-  ]);
 
   // Generate email using AI
   const handleGenerateEmail = useCallback(async () => {
@@ -327,146 +259,38 @@ export default function EmailComposer() {
     }
   }, [state.prompt, validateForm, showSuccess, showError, showWarning]);
 
-  // Send email to recipients
-  const handleSendEmail = useCallback(async () => {
-    // Validate form first
-    if (!validateSendForm()) {
-      showWarning(
-        "Validation Error",
-        "Please fix the form errors before sending the email."
-      );
+  // Open Gmail with generated email content
+  const handleOpenGmail = useCallback(() => {
+    if (!state.generatedEmail.trim()) {
+      showWarning("No Content", "Please generate an email first.");
       return;
     }
 
-    setState((prev) => ({
-      ...prev,
-      isSending: true,
-      errors: { ...prev.errors, sending: undefined },
-    }));
-
     try {
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          recipients: state.recipients,
-          subject: state.emailSubject || "AI Generated Email",
-          content: state.generatedEmail.trim(),
-        }),
-      });
+      const subject = state.emailSubject || "AI Generated Email";
+      const body = state.generatedEmail.trim();
 
-      if (!response.ok) {
-        // Handle HTTP errors
-        const errorText = await response.text();
-        let errorMessage = "Failed to send email";
+      // Open Gmail compose with pre-filled content
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(
+        subject
+      )}&body=${encodeURIComponent(body)}`;
 
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.error || errorMessage;
-        } catch {
-          // If response is not JSON, use status text
-          errorMessage = `Server error (${response.status}): ${response.statusText}`;
-        }
+      window.open(gmailUrl, "_blank");
 
-        setState((prev) => ({
-          ...prev,
-          isSending: false,
-          errors: {
-            ...prev.errors,
-            sending: errorMessage,
-          },
-        }));
-
-        showError("Send Failed", errorMessage);
-        return;
-      }
-
-      const data: EmailSendResponse = await response.json();
-
-      if (data.success) {
-        // Handle successful sending
-        const recipientCount = data.sentCount || 0;
-        const failedCount = data.failedRecipients?.length || 0;
-
-        if (failedCount > 0) {
-          // Partial success
-          const successMessage = `Email sent to ${recipientCount} recipient${
-            recipientCount === 1 ? "" : "s"
-          }`;
-          const failureMessage = `Failed to send to ${failedCount} recipient${
-            failedCount === 1 ? "" : "s"
-          }: ${data.failedRecipients?.join(", ")}`;
-
-          showWarning(
-            "Partially Successful",
-            `${successMessage}. ${failureMessage}`
-          );
-
-          setState((prev) => ({
-            ...prev,
-            isSending: false,
-            errors: {
-              ...prev.errors,
-              sending: `Partially successful: ${data.error}`,
-            },
-          }));
-        } else {
-          // Complete success
-          const successMessage = `Email successfully sent to ${recipientCount} recipient${
-            recipientCount === 1 ? "" : "s"
-          }!`;
-
-          showSuccess("Email Sent", successMessage);
-
-          // Clear form after successful sending (requirement 5.6)
-          setState({
-            recipients: [],
-            prompt: "",
-            generatedEmail: "",
-            emailSubject: "",
-            isGenerating: false,
-            isSending: false,
-            errors: {},
-          });
-        }
-      } else {
-        const errorMessage = data.error || "Failed to send email";
-        setState((prev) => ({
-          ...prev,
-          isSending: false,
-          errors: {
-            ...prev.errors,
-            sending: errorMessage,
-          },
-        }));
-
-        showError("Send Failed", errorMessage);
-      }
+      showSuccess(
+        "Gmail Opened",
+        "Gmail has been opened with your AI-generated email. Add recipient email addresses and send!"
+      );
     } catch (error) {
-      console.error("Error sending email:", error);
-      const errorMessage =
-        error instanceof Error
-          ? `Network error: ${error.message}`
-          : "Network error occurred. Please check your connection and try again.";
-
-      setState((prev) => ({
-        ...prev,
-        isSending: false,
-        errors: {
-          ...prev.errors,
-          sending: errorMessage,
-        },
-      }));
-
-      showError("Network Error", errorMessage);
+      console.error("Error opening Gmail:", error);
+      showError(
+        "Failed to Open Gmail",
+        "Could not open Gmail. Please try copying the content manually."
+      );
     }
   }, [
-    state.recipients,
     state.generatedEmail,
     state.emailSubject,
-    validateSendForm,
     showSuccess,
     showError,
     showWarning,
@@ -557,13 +381,6 @@ export default function EmailComposer() {
 
         {/* Main form */}
         <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-          {/* Recipients Input */}
-          <RecipientInput
-            recipients={state.recipients}
-            onRecipientsChange={handleRecipientsChange}
-            errors={state.errors.recipients ? [state.errors.recipients] : []}
-          />
-
           {/* Prompt Input */}
           <div className="space-y-3">
             <label
@@ -709,111 +526,24 @@ export default function EmailComposer() {
                 placeholder="Your AI-generated email will appear here. You can edit it before sending."
               />
 
-              {/* Send Email Button */}
+              {/* Open Gmail Button */}
               <div className="flex justify-center pt-4">
                 <button
-                  onClick={handleSendEmail}
-                  disabled={
-                    state.isSending ||
-                    state.recipients.length === 0 ||
-                    !state.generatedEmail.trim()
-                  }
-                  className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transform ${
-                    state.isSending ||
-                    state.recipients.length === 0 ||
+                  onClick={handleOpenGmail}
+                  disabled={!state.generatedEmail.trim()}
+                  className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transform ${
                     !state.generatedEmail.trim()
                       ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                      : "bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 active:from-green-800 active:to-green-900 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                      : "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 active:from-red-800 active:to-red-900 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
                   }`}
                 >
-                  {state.isSending ? (
-                    <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      <span className="hidden sm:inline">Sending Email...</span>
-                      <span className="sm:hidden">Sending...</span>
-                    </div>
-                  ) : (
-                    <>
-                      <svg
-                        className="w-4 h-4 inline mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                        />
-                      </svg>
-                      <span className="hidden sm:inline">
-                        Send Email to {state.recipients.length} recipient
-                        {state.recipients.length === 1 ? "" : "s"}
-                      </span>
-                      <span className="sm:hidden">
-                        Send ({state.recipients.length})
-                      </span>
-                    </>
-                  )}
+                  <img
+                    src="/Gmail.svg"
+                    alt="Gmail"
+                    className="w-5 h-5 inline mr-2 filter brightness-0 invert"
+                  />
+                  <span>Open in Gmail</span>
                 </button>
-              </div>
-            </div>
-          )}
-
-          {/* Email sending status messages */}
-          {state.errors.sending && (
-            <div
-              className={`border rounded-xl p-4 shadow-sm ${
-                state.errors.sending.startsWith("✓")
-                  ? "bg-green-50 border-green-200"
-                  : "bg-red-50 border-red-200"
-              }`}
-            >
-              <div className="flex items-start">
-                <svg
-                  className={`w-5 h-5 mr-3 flex-shrink-0 mt-0.5 ${
-                    state.errors.sending.startsWith("✓")
-                      ? "text-green-400"
-                      : "text-red-400"
-                  }`}
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  {state.errors.sending.startsWith("✓") ? (
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  ) : (
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  )}
-                </svg>
-                <div>
-                  <p
-                    className={`text-sm font-medium ${
-                      state.errors.sending.startsWith("✓")
-                        ? "text-green-800"
-                        : "text-red-800"
-                    }`}
-                  >
-                    {state.errors.sending.startsWith("✓") ? "Success" : "Error"}
-                  </p>
-                  <p
-                    className={`text-sm mt-1 ${
-                      state.errors.sending.startsWith("✓")
-                        ? "text-green-700"
-                        : "text-red-700"
-                    }`}
-                  >
-                    {state.errors.sending}
-                  </p>
-                </div>
               </div>
             </div>
           )}
