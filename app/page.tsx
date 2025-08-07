@@ -3,12 +3,12 @@ import ErrorBoundary from "../components/ErrorBoundary";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto px-4 py-8">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex flex-col">
+      <div className="container mx-auto px-4 py-8 flex-1 flex flex-col">
         <ErrorBoundary>
-          <div className="max-w-6xl mx-auto">
+          <div className="flex-1 flex flex-col">
             {/* Page Header */}
-            <header className="text-center mb-8">
+            <header className="text-center mb-4">
               <div className="flex justify-center gap-2 items-center">
                 <div className="inline-flex items-center justify-center relative top-1 w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-4 shadow-lg">
                   <svg
@@ -29,7 +29,7 @@ export default function Home() {
                   AI Email Composer
                 </h1>
               </div>
-              <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-lg max-w-2xl mx-auto text-slate-600 leading-relaxed">
                 Transform your ideas into professional emails with AI. Generate
                 and edit content, then open directly in Gmail to add recipients
                 and send.
@@ -37,12 +37,15 @@ export default function Home() {
             </header>
 
             {/* Main Application */}
-            <EmailComposer />
+            <div className="flex-1">
+              <EmailComposer />
+            </div>
 
             {/* Footer */}
-            <footer className="text-center mt-12 text-slate-500">
+            <footer className="text-center mt-8  text-slate-500">
               <p className="text-sm">
-                Powered by Groq AI • Built with Next.js and Tailwind CSS
+                • Made
+                by Surjendu
               </p>
             </footer>
           </div>

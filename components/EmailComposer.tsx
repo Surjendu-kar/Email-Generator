@@ -1,17 +1,97 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import EmailEditor from "./EmailEditor";
 import LoadingSpinner from "./LoadingSpinner";
 import NotificationSystem, { useNotifications } from "./NotificationSystem";
 import { EmailGenerationResponse } from "../types";
 
 export default function EmailComposer() {
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1,
+      },
+    },
+  } as const;
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+    },
+  } as const;
+
+  const buttonVariants = {
+    hover: {
+      scale: 1.05,
+    },
+    tap: {
+      scale: 0.95,
+    },
+  } as const;
+
+  const toneButtonVariants = {
+    hover: {
+      scale: 1.05,
+      y: -2,
+    },
+    tap: {
+      scale: 0.95,
+    },
+  } as const;
+
+  const generateButtonVariants = {
+    idle: {
+      scale: 1,
+      rotate: 0,
+    },
+    generating: {
+      scale: 1.02,
+      rotate: 0,
+    },
+    success: {
+      scale: 1,
+      rotate: 0,
+    },
+    hover: {
+      scale: 1.05,
+    },
+    tap: {
+      scale: 0.95,
+    },
+  } as const;
+
+  const loadingSpinnerVariants = {
+    hidden: { opacity: 0, scale: 0 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+    },
+  } as const;
+
+  const successVariants = {
+    hidden: { opacity: 0, y: 20, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+    },
+  } as const;
+
   // Application state management
   const [state, setState] = useState({
     prompt: "",
     generatedEmail: "",
     emailSubject: "",
+    selectedTone: "professional",
     isGenerating: false,
     errors: {} as Record<string, string | undefined>,
   });
@@ -35,6 +115,7 @@ export default function EmailComposer() {
       prompt: "",
       generatedEmail: "",
       emailSubject: "",
+      selectedTone: "professional",
       isGenerating: false,
       errors: {},
     });
@@ -49,6 +130,48 @@ export default function EmailComposer() {
     setShowResetConfirmation(false);
     resetForm();
   }, [resetForm]);
+
+  // Tone options
+  const toneOptions = [
+    {
+      value: "professional",
+      label: "Professional",
+      icon: "💼",
+      description: "Formal and business-appropriate",
+    },
+    {
+      value: "friendly",
+      label: "Friendly",
+      icon: "😊",
+      description: "Warm and approachable",
+    },
+    {
+      value: "formal",
+      label: "Formal",
+      icon: "🎩",
+      description: "Very formal and respectful",
+    },
+    {
+      value: "casual",
+      label: "Casual",
+      icon: "👋",
+      description: "Relaxed and conversational",
+    },
+    {
+      value: "persuasive",
+      label: "Persuasive",
+      icon: "🎯",
+      description: "Compelling and convincing",
+    },
+  ];
+
+  // Handle tone selection
+  const handleToneChange = useCallback((tone: string) => {
+    setState((prev) => ({
+      ...prev,
+      selectedTone: tone,
+    }));
+  }, []);
 
   // Check if form has content that would be lost
   const hasFormContent = useCallback(() => {
@@ -170,7 +293,9 @@ export default function EmailComposer() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompt: state.prompt.trim(),
+          prompt: `Write an email in a ${
+            state.selectedTone
+          } tone. ${state.prompt.trim()}`,
         }),
       });
 
@@ -257,7 +382,14 @@ export default function EmailComposer() {
 
       showError("Network Error", errorMessage);
     }
-  }, [state.prompt, validateForm, showSuccess, showError, showWarning]);
+  }, [
+    validateForm,
+    showWarning,
+    state.selectedTone,
+    state.prompt,
+    showError,
+    showSuccess,
+  ]);
 
   // Open Gmail with generated email content
   const handleOpenGmail = useCallback(() => {
@@ -380,9 +512,62 @@ export default function EmailComposer() {
         </div>
 
         {/* Main form */}
-        <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+        <motion.div
+          className="bg-white rounded-xl shadow-xl border border-slate-200 p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {/* Tone Selector */}
+          <div className="space-y-3" variants={itemVariants}>
+            <label className="block text-sm font-semibold text-slate-700">
+              Email Tone
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {toneOptions.map((tone, index) => (
+                <motion.button
+                  key={tone.value}
+                  type="button"
+                  onClick={() => handleToneChange(tone.value)}
+                  className={`p-3 cursor-pointer rounded-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    state.selectedTone === tone.value
+                      ? "border-blue-500 bg-blue-50 text-blue-700 shadow-md"
+                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-slate-100"
+                  }`}
+                  title={tone.description}
+                  variants={toneButtonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="text-center">
+                    <motion.div
+                      className="text-lg mb-1"
+                      animate={{
+                        rotate:
+                          state.selectedTone === tone.value
+                            ? [0, 10, -10, 0]
+                            : 0,
+                      }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      {tone.icon}
+                    </motion.div>
+                    <div className="text-xs font-medium">{tone.label}</div>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+            <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-200">
+              💡 Select the tone that best fits your email&apos;s purpose. The
+              AI will adjust the language and style accordingly.
+            </p>
+          </div>
+
           {/* Prompt Input */}
-          <div className="space-y-3">
+          <motion.div className="space-y-3" variants={itemVariants}>
             <label
               htmlFor="prompt-input"
               className="block text-sm font-semibold text-slate-700"
@@ -428,25 +613,78 @@ export default function EmailComposer() {
                 {state.errors.prompt}
               </p>
             )}
-          </div>
+          </motion.div>
 
           {/* Generate Email Button */}
-          <div className="flex justify-center">
-            <button
+          <motion.div className="flex justify-center" variants={itemVariants}>
+            <motion.button
               onClick={handleGenerateEmail}
               disabled={state.isGenerating || !state.prompt.trim()}
-              className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform ${
+              className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                 state.isGenerating || !state.prompt.trim()
                   ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                  : "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
               }`}
+              animate={
+                state.isGenerating
+                  ? {
+                      scale: [1, 1.02, 1],
+                      rotate: [0, 1, -1, 0],
+                      transition: {
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      },
+                    }
+                  : state.generatedEmail
+                  ? {
+                      scale: [1, 1.05, 1],
+                      transition: { duration: 0.6, ease: "easeInOut" },
+                    }
+                  : { scale: 1, rotate: 0 }
+              }
+              whileHover={
+                state.isGenerating || !state.prompt.trim()
+                  ? {}
+                  : { scale: 1.05 }
+              }
+              whileTap={
+                state.isGenerating || !state.prompt.trim()
+                  ? {}
+                  : { scale: 0.95 }
+              }
             >
               {state.isGenerating ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  <span className="hidden sm:inline">Generating Email...</span>
-                  <span className="sm:hidden">Generating...</span>
-                </div>
+                <motion.div
+                  className="flex items-center"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <motion.div
+                    className="rounded-full h-4 w-4 border-b-2 border-white mr-2"
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                  />
+                  <motion.span
+                    className="hidden sm:inline"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    Generating Email...
+                  </motion.span>
+                  <motion.span
+                    className="sm:hidden"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    Generating...
+                  </motion.span>
+                </motion.div>
               ) : (
                 <>
                   <svg
@@ -465,8 +703,8 @@ export default function EmailComposer() {
                   Generate Email
                 </>
               )}
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
           {/* Loading state for email generation */}
           {state.isGenerating && (
@@ -503,51 +741,73 @@ export default function EmailComposer() {
           )}
 
           {/* Generated Email Editor */}
-          {state.generatedEmail && (
-            <div className="space-y-4">
-              {/* Subject line display */}
-              {state.emailSubject && (
-                <div className="space-y-3">
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Email Subject
-                  </label>
-                  <div className="px-4 py-3 bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-xl shadow-sm">
-                    <p className="text-slate-900 font-medium">
-                      {state.emailSubject}
-                    </p>
+          <AnimatePresence>
+            {state.generatedEmail && (
+              <motion.div
+                className="space-y-4"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+              >
+                {/* Subject line display */}
+                {state.emailSubject && (
+                  <div className="space-y-3">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Email Subject
+                    </label>
+                    <div className="px-4 py-3 bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-xl shadow-sm">
+                      <p className="text-slate-900 font-medium">
+                        {state.emailSubject}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Email content editor */}
-              <EmailEditor
-                content={state.generatedEmail}
-                onChange={handleEmailContentChange}
-                placeholder="Your AI-generated email will appear here. You can edit it before sending."
-              />
-
-              {/* Open Gmail Button */}
-              <div className="flex justify-center pt-4">
-                <button
-                  onClick={handleOpenGmail}
-                  disabled={!state.generatedEmail.trim()}
-                  className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transform ${
-                    !state.generatedEmail.trim()
-                      ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                      : "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 active:from-red-800 active:to-red-900 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                  }`}
+                {/* Email content editor */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
                 >
-                  <img
-                    src="/Gmail.svg"
-                    alt="Gmail"
-                    className="w-5 h-5 inline mr-2 filter brightness-0 invert"
+                  <EmailEditor
+                    content={state.generatedEmail}
+                    onChange={handleEmailContentChange}
+                    placeholder="Your AI-generated email will appear here. You can edit it before sending."
                   />
-                  <span>Open in Gmail</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+                </motion.div>
+
+                {/* Open Gmail Button */}
+                <motion.div
+                  className="flex justify-center pt-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <motion.button
+                    onClick={handleOpenGmail}
+                    disabled={!state.generatedEmail.trim()}
+                    className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
+                      !state.generatedEmail.trim()
+                        ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                        : "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
+                    }`}
+                    variants={buttonVariants}
+                    whileHover={!state.generatedEmail.trim() ? {} : "hover"}
+                    whileTap={!state.generatedEmail.trim() ? {} : "tap"}
+                  >
+                    <img
+                      src="/Gmail.svg"
+                      alt="Gmail"
+                      className="w-5 h-5 inline mr-2 filter brightness-0 invert"
+                    />
+                    <span>Open in Gmail</span>
+                  </motion.button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </>
   );
