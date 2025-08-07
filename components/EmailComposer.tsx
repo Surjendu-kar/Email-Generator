@@ -519,7 +519,7 @@ export default function EmailComposer() {
           animate="visible"
         >
           {/* Tone Selector */}
-          <div className="space-y-3" variants={itemVariants}>
+          <motion.div className="space-y-3" variants={itemVariants}>
             <label className="block text-sm font-semibold text-slate-700">
               Email Tone
             </label>
@@ -564,7 +564,7 @@ export default function EmailComposer() {
               💡 Select the tone that best fits your email&apos;s purpose. The
               AI will adjust the language and style accordingly.
             </p>
-          </div>
+          </motion.div>
 
           {/* Prompt Input */}
           <motion.div className="space-y-3" variants={itemVariants}>
